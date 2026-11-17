@@ -1,0 +1,1070 @@
+/* Monster Fish Exhibition — Styles */
+
+/* =========================== Fonts =========================== */
+/* The brand fonts the client supplied in 2026-10 (source: ../ziti/).
+   They sit in fonts/ next to this stylesheet, so the same relative path works
+   for the dev tree and for bundled/ (bundle_all.py copies fonts/ across).
+   Verified to load over file:// as well as http, so the kiosk can still be run
+   by double-clicking bundled/index.html.
+   Chivo ships as three static weights (Medium / Bold / Black); the italic cut
+   was not declared because the only italic in the UI is a 10 px scientific name
+   and matching it to a Black italic would look wrong — the browser synthesises
+   an oblique from the upright faces instead. */
+@font-face {
+  font-family: 'Chivo';
+  src: url('../fonts/Chivo-Medium.ttf') format('truetype');
+  font-weight: 500; font-style: normal; font-display: block;
+}
+@font-face {
+  font-family: 'Chivo';
+  src: url('../fonts/Chivo-Bold.ttf') format('truetype');
+  font-weight: 700; font-style: normal; font-display: block;
+}
+@font-face {
+  font-family: 'Chivo';
+  src: url('../fonts/Chivo-Black.ttf') format('truetype');
+  font-weight: 900; font-style: normal; font-display: block;
+}
+/* Oswald is a variable font (wght 200-700), so one file covers the whole range. */
+@font-face {
+  font-family: 'Oswald';
+  src: url('../fonts/Oswald.ttf') format('truetype');
+  font-weight: 200 700; font-style: normal; font-display: block;
+}
+
+:root {
+  --font-body: 'Chivo', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Oswald', 'Chivo', 'Segoe UI', system-ui, sans-serif;
+
+  /* Client review 2026-10-20: "将过渡动画的速度减慢约 2 秒，使其更加流畅" —
+     page cross-fades and the install slide now run 2.4 s (was 0.4 s). Keep this
+     in sync with SCENE_FADE_MS in js/config.js. */
+  --scene-fade: 2.4s;
+
+  /* Client review 2026-10-22: the phone slides out to the right after the
+     countdown. Keep in sync with PHONE_SLIDE_OUT_MS in js/config.js. */
+  --phone-slide-out: 1.6s;
+
+  /* 2026-10-22: 点中鱼之后,登录页那部手机从右侧滑进来 */
+  --phone-slide-in: 1.6s;
+
+  /* 2026-10-23: 安装页先让白字滑入(0.9 s),1 秒后手机才从右侧滑进来 */
+  --copy-in: 0.9s;
+}
+
+/* =========================== Base =========================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body { font-family: var(--font-body); }
+
+/* =========================== Buttons =========================== */
+
+.kiosk-btn {
+  min-width: calc(160px * var(--ui-scale));
+  min-height: calc(64px * var(--ui-scale));
+  padding: calc(16px * var(--ui-scale)) calc(40px * var(--ui-scale));
+  font-size: calc(28px * var(--ui-scale));
+  font-weight: 700;
+  border: 2px solid #5b9bd4;
+  border-radius: calc(14px * var(--ui-scale));
+  background: #5b9bd4;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  text-transform: uppercase;
+  letter-spacing: calc(2px * var(--ui-scale));
+  font-family: inherit;
+  outline: none;
+}
+
+.kiosk-btn:hover {
+  background: #3a6ea8;
+  box-shadow: 0 0 30px rgba(91, 155, 212, 0.4);
+}
+
+.kiosk-btn:active {
+  background: #2f5c8f;
+  transform: scale(0.96);
+}
+
+.kiosk-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.primary-btn {
+  background: #5b9bd4;
+  border-color: #5b9bd4;
+  color: #ffffff;
+}
+
+/* Buttons inside the phone app — orange */
+.phone-body .kiosk-btn {
+  background: #e8903e;
+  border-color: #e8903e;
+  color: #ffffff;
+}
+
+.phone-body .kiosk-btn:hover {
+  background: #cf7a2e;
+  box-shadow: 0 0 30px rgba(232, 144, 62, 0.4);
+}
+
+.phone-body .kiosk-btn:active {
+  background: #b8691f;
+}
+
+.phone-body .kiosk-btn.return-btn {
+  background: #fdf1e3;
+  border-color: #e8903e;
+  color: #e8903e;
+}
+
+.phone-body .kiosk-btn.return-btn:hover {
+  background: #f3e2cc;
+  box-shadow: 0 0 30px rgba(232, 144, 62, 0.3);
+}
+
+.phone-body .kiosk-btn.return-btn:active {
+  background: #ead5b4;
+}
+
+@keyframes go-fish-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(232, 144, 62, 0.3); }
+  50% { box-shadow: 0 0 50px rgba(232, 144, 62, 0.7); }
+}
+
+/* =========================== Phone Frame (cream + orange) =========================== */
+
+.phone-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(460px * var(--ui-scale));
+  height: calc(800px * var(--ui-scale));
+  background: #0a1320;
+  border-radius: calc(48px * var(--ui-scale));
+  padding: calc(14px * var(--ui-scale));
+  box-shadow: 0 0 0 3px #050a12, 0 40px 90px rgba(0, 0, 0, 0.65);
+}
+
+.phone-frame--right {
+  left: auto;
+  right: calc(50px * var(--ui-scale));
+  transform: translateY(-50%);
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: #fdf1e3;
+  border-radius: calc(34px * var(--ui-scale));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-status-bar {
+  background: #e8903e;
+  color: #ffffff;
+  font-size: calc(21px * var(--ui-scale));
+  font-weight: 700;
+  letter-spacing: calc(1px * var(--ui-scale));
+  text-align: center;
+  padding: calc(16px * var(--ui-scale)) calc(18px * var(--ui-scale));
+  flex-shrink: 0;
+}
+
+/* Species image above the "Common Name" row, inside the pale data area */
+.form-fish-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(4px * var(--ui-scale)) 0 calc(12px * var(--ui-scale));
+  border-bottom: 1px solid #ead3ae;
+}
+
+.status-fish-img {
+  display: none;
+  width: calc(200px * var(--ui-scale));
+  height: calc(92px * var(--ui-scale));
+  object-fit: contain;
+}
+
+.phone-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: calc(24px * var(--ui-scale)) calc(22px * var(--ui-scale));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(18px * var(--ui-scale));
+  text-align: center;
+  color: #4a3a28;
+  touch-action: pan-y;
+}
+
+.phone-body--top {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.phone-body--form {
+  justify-content: flex-start;
+  align-items: stretch;
+  text-align: left;
+  gap: 0;
+}
+
+.phone-title {
+  font-size: calc(28px * var(--ui-scale));
+  color: #4a3a28;
+  margin: 0;
+  font-weight: 700;
+}
+
+.phone-text {
+  font-size: calc(20px * var(--ui-scale));
+  color: #8a7a64;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* =========================== Attract =========================== */
+
+/* 第一页背景视频：客户 2026-10-30 提供 DSC_5627.MOV（河边渔船收网）。
+   放在两块 canvas 之上、UI 之下 —— 第一页时它盖住画出来的河流和鱼群；
+   切到安装页等步骤时淡出，露出 canvas 上原来的画面。 */
+#attract-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease-out;
+  background: #14243f;
+}
+
+#attract-video.visible {
+  opacity: 1;
+}
+
+.attract-panel {
+  position: absolute;
+  /* 客户 2026-10-30："把原本第一页的字和框放在视频的船的下面"。
+     用**下沿定位**而不是 top：视频里船身最低点约在画面 52% 处（镜头有轻微俯仰），
+     面板贴底留 3.5% 边距，任何分辨率下都不会压到船，也不会掉出画面。 */
+  bottom: 3.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Widened from 900px so the enlarged copy still fits on one line per sentence
+     (client review: "第一页所有的字都调大一点"). */
+  width: calc(1000px * var(--ui-scale));
+  background: rgba(20, 42, 74, 0.92);
+  border: 2px solid #5b9bd4;
+  border-radius: calc(24px * var(--ui-scale));
+  padding: calc(30px * var(--ui-scale)) calc(52px * var(--ui-scale))
+           calc(26px * var(--ui-scale));
+  text-align: center;
+  color: #f7f9fd;
+  opacity: 0;
+  /* Leaves faster than the 2.4 s page fade: the install copy slides in on the
+     left at the same time, and two blocks of text on top of each other for two
+     seconds read as a glitch, not as a transition. */
+  transition: opacity 0.6s ease-out;
+  /* The panel sits above the canvas, so only its controls may capture taps —
+     the fish swimming around it stay tappable (catch step). */
+  pointer-events: none;
+}
+
+.attract-panel button {
+  pointer-events: auto;
+}
+
+/* Page 1's button, enlarged with the rest of its type. Scoped here on purpose:
+   .kiosk-btn is shared by every page, and only the poster was asked to grow. */
+.attract-panel .kiosk-btn {
+  font-size: calc(29px * var(--ui-scale));
+}
+
+.attract-panel.visible {
+  opacity: 1;
+}
+
+#attract-title {
+  font-size: calc(70px * var(--ui-scale));
+  font-weight: 700;
+  color: #b4d2eb;
+  margin: 0 0 20px;
+  text-transform: uppercase;
+  letter-spacing: calc(3px * var(--ui-scale));
+}
+
+#attract-text {
+  font-size: calc(41px * var(--ui-scale));
+  line-height: 1.5;
+  color: #f7f9fd;
+  white-space: pre-line;
+  margin: 0 0 28px;
+}
+
+/* Install step: no box, no heading. The copy is centred in the area LEFT of
+   the phone panel — (viewport − phone panel) — so it stays visually centred at
+   any screen size instead of centring against the whole viewport and drifting
+   under the phone.
+   NOTE: the element lives inside #scene-screensaver (not directly under
+   #ui-overlay), so the scene is part of the selector. */
+#ui-overlay > .scene > .attract-install-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: calc(520px * var(--ui-scale));   /* phone width + its right margin */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;        /* horizontal centring of the copy block */
+  justify-content: center;    /* vertical centring */
+  padding: 0 calc(40px * var(--ui-scale));
+  background: none;
+  border: none;
+  border-radius: 0;
+  color: #f7f9fd;
+  text-align: center;
+  pointer-events: none;
+  opacity: 1;
+}
+
+/* keep the copy from hugging the phone on wide screens.
+   920px so that each sentence fits on ONE line: both sentences are hard-broken
+   in SPLIT_STEP.text, so the block only has to be wide enough for the longer of
+   the two. Measured natural widths in Chivo: 892 px and 850 px at 30px, which is
+   why the limit was 920 px. The copy is now 36px, so the limit follows it to
+   1120 px (natural widths ~1070 px and ~1020 px) — otherwise the sentences wrap
+   again and strand a word, which is what the client reported first. */
+#ui-overlay > .scene > .attract-install-text > * {
+  max-width: calc(1120px * var(--ui-scale));
+}
+
+.attract-install-text p {
+  font-size: calc(36px * var(--ui-scale));
+  line-height: 1.55;
+  margin: 0;
+  white-space: pre-line;
+  /* Safety net: if a font metric ever differs, never strand a single word. */
+  text-wrap: pretty;
+}
+
+/* Hint sits with the copy on the left half and points across at the phone
+   (client review: it used to sit under the phone's Install button). */
+.attract-install-hint {
+  color: #e0b84a;
+  font-size: calc(28px * var(--ui-scale));
+  font-weight: 700;
+  margin: calc(26px * var(--ui-scale)) 0 0 !important;
+  text-align: center;
+}
+
+/* "make the button shake or glow" — draws the eye to Install */
+@keyframes install-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(232, 144, 62, 0.45); transform: translateY(0); }
+  50%      { box-shadow: 0 0 34px rgba(232, 144, 62, 0.95); transform: translateY(-2px); }
+}
+
+#btn-attract-install {
+  animation: install-glow 1.4s ease-in-out infinite;
+}
+
+/* =========================== Install countdown =========================== */
+
+.attract-countdown {
+  position: absolute;
+  inset: 0;
+  /* Centred in the area LEFT of the phone panel, not against the whole
+     viewport (client review: "捕鱼的倒计时放到没手机那部分的中心位置").
+     Same reservation as .attract-install-text, so the countdown, the copy and
+     the phone all agree on where the phone column starts. */
+  right: calc(520px * var(--ui-scale));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8px * var(--ui-scale));
+  text-align: center;
+  color: #f7f9fd;
+  pointer-events: none;
+}
+
+.countdown-line {
+  font-size: calc(52px * var(--ui-scale));
+  font-weight: 700;
+  color: #e8f1fb;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s ease-out, transform 0.45s ease-out;
+}
+
+.countdown-line.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.countdown-number {
+  font-size: calc(210px * var(--ui-scale));
+  font-weight: 900;
+  line-height: 1;
+  color: #e0b84a;
+  margin: 18px 0 0;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.45s ease-out, transform 0.45s ease-out;
+  text-shadow: 0 0 60px rgba(224, 184, 74, 0.6);
+}
+
+.countdown-number.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.app-icon-img {
+  width: calc(96px * var(--ui-scale));
+  height: calc(96px * var(--ui-scale));
+  object-fit: contain;
+  background: #f5c08a;
+  border-radius: calc(22px * var(--ui-scale));
+  padding: calc(12px * var(--ui-scale));
+}
+
+.app-name {
+  font-size: calc(26px * var(--ui-scale));
+  color: #4a3a28;
+  margin: 0;
+  font-weight: 700;
+}
+
+.app-desc {
+  font-size: calc(18px * var(--ui-scale));
+  color: #8a7a64;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.yellow-btn {
+  background: #e0b84a;
+  border-color: #e0b84a;
+  color: #1a2740;
+  margin-top: calc(24px * var(--ui-scale));
+}
+
+.yellow-btn:hover {
+  background: #c99d2f;
+  box-shadow: 0 0 30px rgba(224, 184, 74, 0.4);
+}
+
+.yellow-btn:active {
+  background: #b88d27;
+}
+
+.installed-text {
+  font-size: calc(26px * var(--ui-scale));
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+/* =========================== Fish Selection =========================== */
+
+.fish-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* 8 条鱼 = 4 行,把卡片图片高度(90 -> 80)和行距(10 -> 8)收一点,
+     整页正好放进手机面板,不需要滚动就能看到全部 8 种。 */
+  gap: calc(8px * var(--ui-scale));
+  width: 100%;
+}
+
+.fish-card {
+  background: #ffffff;
+  border: 2px solid #ead3ae;
+  border-radius: calc(12px * var(--ui-scale));
+  padding: calc(8px * var(--ui-scale));
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fish-card:hover {
+  border-color: #e8903e;
+  box-shadow: 0 0 16px rgba(232, 144, 62, 0.35);
+  transform: translateY(-2px);
+}
+
+.fish-card:active {
+  transform: scale(0.96);
+  background: #fdf1e3;
+}
+
+.fish-card-img {
+  width: calc(130px * var(--ui-scale));
+  height: calc(64px * var(--ui-scale));
+  object-fit: contain;
+  border-radius: calc(6px * var(--ui-scale));
+  margin-bottom: calc(5px * var(--ui-scale));
+}
+
+.fish-card-name {
+  font-size: calc(16px * var(--ui-scale));
+  font-weight: 700;
+  line-height: 1.2;
+  color: #4a3a28;
+  margin: 0 0 3px;
+}
+
+.fish-card-scientific {
+  font-size: calc(12px * var(--ui-scale));
+  font-style: italic;
+  line-height: 1.2;
+  color: #8a7a64;
+}
+
+/* =========================== Measurement =========================== */
+
+.data-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: calc(12px * var(--ui-scale)) 0;
+  border-bottom: 1px solid #ead3ae;
+  width: 100%;
+}
+
+.data-label {
+  font-size: calc(14px * var(--ui-scale));
+  color: #8a7a64;
+  text-transform: uppercase;
+  letter-spacing: calc(1px * var(--ui-scale));
+}
+
+.data-value {
+  font-size: calc(19px * var(--ui-scale));
+  font-weight: 700;
+  color: #4a3a28;
+  text-align: right;
+  transition: opacity 0.3s;
+}
+
+.data-value.revealed {
+  animation: data-reveal 0.4s ease-out;
+}
+
+/* SCIENTIFIC names in italic — client requirement, verbatim: "can we make sure
+   that all scientific name are in Italics the scientists are very particular
+   about that" (Esther Parn). Common names stay upright; so do Length, Weight and
+   Location, which are numbers and place names. */
+#data-scientific-name {
+  font-style: italic;
+}
+
+@keyframes data-reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================== Correction =========================== */
+
+/* The overlay fills the PHONE SCREEN (it is a child of .phone-screen), so the
+   note sits inside the phone UI with the phone chrome still visible. */
+.correction-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(253, 241, 227, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(34px * var(--ui-scale));
+  z-index: 5;
+  pointer-events: auto;
+}
+
+/* Paper-note styling from the client's markup: a pinned note with a tape mark,
+   a warning glyph, and a hand-drawn OK button. */
+.note-card {
+  position: relative;
+  width: calc(300px * var(--ui-scale));
+  background: #fdfcf7;
+  border-radius: calc(5px * var(--ui-scale));
+  padding: calc(20px * var(--ui-scale)) calc(20px * var(--ui-scale)) calc(24px * var(--ui-scale));
+  text-align: center;
+  color: #2f2a22;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+  transform: rotate(-1.6deg);
+  animation: note-drop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes note-drop {
+  from { transform: rotate(-1.6deg) translateY(-46px) scale(0.94); opacity: 0; }
+  to   { transform: rotate(-1.6deg) translateY(0) scale(1); opacity: 1; }
+}
+
+/* the "tape" mark at the top of the note */
+.note-pin {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: calc(72px * var(--ui-scale));
+  height: calc(20px * var(--ui-scale));
+  background: rgba(232, 144, 62, 0.6);
+  border-radius: calc(3px * var(--ui-scale));
+}
+
+.note-warning {
+  font-size: calc(36px * var(--ui-scale));
+  line-height: 1;
+  color: #c9a227;
+  margin-bottom: calc(10px * var(--ui-scale));
+}
+
+.note-text {
+  font-size: calc(23px * var(--ui-scale));
+  line-height: 1.4;
+  font-weight: 600;
+  margin: 0 0 18px;
+  color: #3a332a;
+}
+
+/* "OK" in a hand-drawn green box */
+.note-ok {
+  display: inline-block;
+  min-width: calc(150px * var(--ui-scale));
+  padding: calc(10px * var(--ui-scale)) calc(26px * var(--ui-scale));
+  font-size: calc(26px * var(--ui-scale));
+  font-weight: 800;
+  letter-spacing: calc(3px * var(--ui-scale));
+  color: #2f7d32;
+  background: #ffffff;
+  border: 3px solid #2f7d32;
+  border-radius: calc(26px * var(--ui-scale));
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 3px 0 rgba(47, 125, 50, 0.35);
+}
+
+.note-ok:active {
+  transform: scale(0.96);
+  background: #eef7ee;
+}
+
+/* =========================== Choice =========================== */
+
+.choice-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: calc(20px * var(--ui-scale));
+  width: 100%;
+}
+
+.choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(12px * var(--ui-scale));
+  padding: calc(28px * var(--ui-scale)) calc(20px * var(--ui-scale));
+  font-size: calc(26px * var(--ui-scale));
+  min-width: 0;
+  width: 100%;
+  border-radius: calc(16px * var(--ui-scale));
+}
+
+.choice-icon {
+  font-size: calc(48px * var(--ui-scale));
+}
+
+/* =========================== Animated Pages =========================== */
+
+.animated-page-title {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: calc(55px * var(--ui-scale));
+  font-weight: 700;
+  color: #b4d2eb;
+  text-transform: uppercase;
+  letter-spacing: calc(4px * var(--ui-scale));
+  text-align: center;
+}
+
+/* =========================== Ending =========================== */
+
+.ending-container {
+  position: absolute;
+  top: 2vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 94%;
+  max-width: calc(1300px * var(--ui-scale));
+  height: 96vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 42, 74, 0.95);
+  border: 2px solid #5b9bd4;
+  border-radius: calc(20px * var(--ui-scale));
+  padding: calc(20px * var(--ui-scale)) calc(40px * var(--ui-scale)) calc(16px * var(--ui-scale));
+  text-align: center;
+  color: #f7f9fd;
+  animation: fade-in 0.6s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ending-title {
+  font-size: calc(26px * var(--ui-scale));
+  color: #b4d2eb;
+  margin: 0 0 10px;
+  flex-shrink: 0;
+}
+
+.ending-text {
+  font-size: calc(14px * var(--ui-scale));
+  line-height: 1.5;
+  color: #c6d4ea;
+  max-width: calc(900px * var(--ui-scale));
+  margin: 0 auto 12px;
+  white-space: pre-line;
+  flex-shrink: 0;
+}
+
+.ending-data {
+  text-align: left;
+  background: rgba(31, 56, 99, 0.6);
+  border-radius: calc(12px * var(--ui-scale));
+  padding: calc(10px * var(--ui-scale)) calc(24px * var(--ui-scale));
+  margin-bottom: calc(12px * var(--ui-scale));
+  flex-shrink: 0;
+}
+
+.ending-data h3 {
+  color: #b4d2eb;
+  margin: 0 0 6px;
+  font-size: calc(15px * var(--ui-scale));
+}
+
+#ending-fish-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(2px * var(--ui-scale)) calc(24px * var(--ui-scale));
+}
+
+#ending-fish-details .detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: calc(3px * var(--ui-scale)) 0;
+  border-bottom: 1px solid rgba(91, 155, 212, 0.1);
+}
+
+#ending-fish-details .detail-label {
+  color: #9fb4d8;
+  font-size: calc(13px * var(--ui-scale));
+}
+
+#ending-fish-details .detail-val {
+  color: #e0b84a;
+  font-weight: 600;
+  font-size: calc(13px * var(--ui-scale));
+}
+
+.ending-chart-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: calc(8px * var(--ui-scale));
+}
+
+#ending-chart {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  border-radius: calc(12px * var(--ui-scale));
+  background: rgba(31, 56, 99, 0.4);
+}
+
+.ending-timer-text {
+  font-size: calc(12px * var(--ui-scale));
+  color: #9fb4d8;
+  margin-bottom: calc(8px * var(--ui-scale));
+  flex-shrink: 0;
+}
+
+.ending-container .kiosk-btn {
+  flex-shrink: 0;
+}
+
+/* =========================== Threatened Fishes App closing page =========================== */
+
+/* Shared by the closing page's card AND the copy that now fades in over the two
+   animated ending pages (client 2026-10-20: "动画进行中就把这段文字压在照片上、
+   鱼一入水就显示"). Same geometry, same look, so when the animation hands over to
+   the closing page the text does not move — only the Restart button appears. */
+.threatened-container,
+.ending-overlay {
+  position: absolute;
+  /* Anchored near the top on purpose: the fish enters the water in the lower
+     half, and the copy must not cover that moment. 客户 2026-10-22 把字号调大、
+     版面收窄后段落变高了,所以卡片再往上提一点、内边距再收一点,保证卡片下沿
+     仍停在入水点(约 626 px)之上。 */
+  top: calc(20px * var(--ui-scale));
+  left: 50%;
+  transform: translateX(-50%);
+  /* Client review 2026-10-20 (text layout): "修复右侧出现的错误滚动条。增加文本
+     区域的宽度，使文本能够占据更大的屏幕宽度。"
+       - the panel is now 96% wide (was 90%, max 1120px) so the copy spans most of
+         the screen — at 1080p that is 1843 px of page, 1700 px of text;
+       - the copy fits without scrolling at this width, so overflow is visible and
+         the stray scrollbar on the right is gone. If a future copy edit does
+         overflow, the panel grows instead of showing a bar. */
+  width: 96%;
+  max-width: calc(1520px * var(--ui-scale));
+  max-height: none;
+  overflow: visible;
+  touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Client review: drop the hard blue outline and the rectangular look, use a
+     deep blue that is far more see-through so the photo behind shows, but keep
+     the copy readable. Two things do that together:
+       - backdrop-filter blurs whatever is painted behind the panel (the canvas
+         photo), so the text sits on a soft wash instead of on sharp detail;
+       - the fill is a translucent gradient, denser at the edges, lightest in the
+         middle, which reads as a soft frame without drawing a border line.
+     Corners are much rounder than a rectangle (20px -> 56px) as asked.
+     客户 2026-10-22:"场卖鱼和放生鱼那部分文字背景后面那个透明度再透明一点" —
+     填充一度降到 0.18/0.07/0.14、磨砂 8px;
+     客户 2026-10-23:"can we increase the opacity of the text box" —— 又调回
+     0.44/0.32/0.38、磨砂 10px:文字框这次明确看得出来,照片还能透。 */
+  background: linear-gradient(
+    180deg,
+    rgba(16, 34, 62, 0.44) 0%,
+    rgba(11, 24, 46, 0.32) 55%,
+    rgba(9, 20, 40, 0.38) 100%
+  );
+  backdrop-filter: blur(calc(10px * var(--ui-scale)));
+  -webkit-backdrop-filter: blur(calc(10px * var(--ui-scale)));
+  border: none;
+  border-radius: calc(56px * var(--ui-scale));
+  box-shadow: 0 calc(20px * var(--ui-scale)) calc(64px * var(--ui-scale))
+              rgba(3, 10, 22, 0.6);
+  padding: calc(28px * var(--ui-scale)) calc(44px * var(--ui-scale)) calc(22px * var(--ui-scale));
+  text-align: left;
+  color: #f7f9fd;
+}
+
+/* The closing page cuts in with no animation at all — the client asked for the
+   text to be immediately readable. */
+.threatened-container {
+  animation: none;
+}
+
+/* Copy over the animated pages: hidden until the fish is in the water.
+   客户 2026-10-23:"For this text can we also have a slide in transition" ——
+   从下方 46 px 滑到本位(0.9 s),同时淡入;它不吞点击。
+   收尾信息页那张卡片保持"直接就在位"(两页交接时文字不能跳),所以只有
+   .ending-overlay 有动画。 */
+@keyframes ending-card-in {
+  from { transform: translate(-50%, calc(46px * var(--ui-scale))); }
+  to   { transform: translate(-50%, 0); }
+}
+
+.ending-overlay {
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+  pointer-events: none;
+}
+
+.ending-overlay.visible {
+  opacity: 1;
+  animation: ending-card-in 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.threatened-title {
+  font-size: calc(46px * var(--ui-scale));
+  font-weight: 700;
+  color: #b4d2eb;
+  margin: 0 0 26px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: calc(3px * var(--ui-scale));
+  flex-shrink: 0;
+}
+
+/* 客户 2026-10-22:"市场卖鱼和放生鱼那部分文字的字再大一点,不要这么宽" —
+   字号 28 → 30 px,排版宽度 1660 → 1330 px(同时收紧行高和卡片内边距,
+   让卡片下沿仍停在鱼入水点之上)。 */
+.threatened-text {
+  font-size: calc(30px * var(--ui-scale));
+  line-height: 1.35;
+  color: #dbe6f7;
+  /* The panel is now thin enough that the copy needs its own protection: a tight
+     dark halo round each glyph keeps the letters crisp over whatever bright patch
+     of photo shows through. */
+  text-shadow:
+    0 calc(2px * var(--ui-scale)) calc(6px * var(--ui-scale)) rgba(3, 10, 22, 0.92),
+    0 0 calc(2px * var(--ui-scale)) rgba(3, 10, 22, 0.75);
+  /* 客户 2026-10-20:"增加文本区域的宽度,使文本能够占据更大的屏幕宽度" */
+  width: 100%;
+  max-width: calc(1330px * var(--ui-scale));
+  margin: 0 0 20px;
+  white-space: pre-line;
+  flex-shrink: 0;
+}
+
+.threatened-timer-text {
+  font-size: calc(14px * var(--ui-scale));
+  color: #9fb4d8;
+  margin: 0 0 10px;
+  flex-shrink: 0;
+}
+
+.threatened-container .kiosk-btn {
+  flex-shrink: 0;
+}
+
+/* =========================== Animations for scene transitions =========================== */
+
+/* Slower, smoother hand-over between pages (client review 2026-10-20: ~2 s
+   slower). The outgoing scene is display:none straight away, so what you see is
+   the new page dissolving in over the canvas that was already there. */
+.scene {
+  opacity: 0;
+  transition: opacity var(--scene-fade) ease-out;
+}
+
+.scene.active {
+  opacity: 1;
+}
+
+/* The closing information page is the exception: the client asked for its text
+   to appear IMMEDIATELY when the branch animation ends ("文字应在鱼入水的瞬间立即
+   显示，切勿添加任何不必要的延迟"), so this one cuts in instead of dissolving. */
+#scene-threatened-app.scene {
+  transition: none;
+}
+
+/* Install step entrance.
+   2026-10-20: 手机从右侧滑入(旧版);
+   2026-10-22: "手机滑入取消掉，改成倒计时后手机滑出";
+   2026-10-23: "can we have the white text appear first, after 1 sec then have the
+   phone slide in from the right" —— 现在文字先滑入(0.9 s),1 秒后手机从屏幕外
+   滑回原位(1.6 s)。手机先停在 .phone-pending 状态(藏在右侧屏幕外)。 */
+@keyframes copy-slide-in {
+  from { transform: translateX(-60px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes phone-slide-out {
+  from { transform: translateY(-50%); opacity: 1; }
+  to   { transform: translate(140%, -50%); opacity: 0.75; }
+}
+
+@keyframes phone-slide-in {
+  from { transform: translate(140%, -50%); opacity: 0.15; }
+  to   { transform: translateY(-50%); opacity: 1; }
+}
+
+#attract-install-text.slide-in {
+  animation: copy-slide-in var(--copy-in) cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* 文字进场之前/期间,手机停在右侧屏幕外(不占画面、也不参与过渡) */
+#attract-install-phone.phone-pending {
+  transform: translate(140%, -50%);
+  opacity: 0;
+  transition: none;
+}
+
+#attract-install-phone.slide-in {
+  animation: phone-slide-in var(--phone-slide-in) cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+#attract-install-phone.slide-out {
+  animation: phone-slide-out var(--phone-slide-out) cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* 点中鱼之后,登录页(鱼出现那页)的手机从右侧滑进来 —— 客户 2026-10-22:
+   "捕鱼页面点一个鱼之后，手机再滑出来"。捕鱼那一步手机刚滑走过,这里接上。 */
+#scene-fish-appear .phone-frame.phone-enter {
+  animation: phone-slide-in var(--phone-slide-in) cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* =========================== Scrollbar =========================== */
+
+::-webkit-scrollbar {
+  width: calc(8px * var(--ui-scale));
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(31, 56, 99, 0.3);
+  border-radius: calc(4px * var(--ui-scale));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(91, 155, 212, 0.3);
+  border-radius: calc(4px * var(--ui-scale));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(91, 155, 212, 0.5);
+}
+
+/* =========================== Display face =========================== */
+/* Titles, buttons and big numbers use Oswald, the condensed face the client
+   supplied — it suits the exhibition-poster voice and keeps long button labels
+   compact. This block sits at the END of the file on purpose: .kiosk-btn and
+   .note-ok declare `font-family: inherit` further up, and at equal specificity
+   the later rule wins, so an earlier block would simply be overridden. */
+#attract-title,
+#split-title,
+.animated-page-title,
+.threatened-title,
+.ending-title,
+.countdown-line,
+.countdown-number,
+.kiosk-btn,
+.choice-btn,
+.choice-icon,
+.note-ok,
+.attract-install-hint,
+.phone-title,
+.phone-status-bar,
+.app-name,
+.installed-text {
+  font-family: var(--font-display);
+}
+
+
+
+
+

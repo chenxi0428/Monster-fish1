@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>A Monster Mission — Monster Fish Exhibition</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Critical inline styles for instant render */
+    html, body {
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      background: #14243f;
+      /* Fallback stack only — css/style.css defines the Chivo/Oswald @font-face
+         rules that actually apply (they live there so the bundled copy, which
+         rewrites this file, still resolves fonts/ next to it). */
+      font-family: 'Chivo', 'Segoe UI', system-ui, sans-serif;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: default;
+    }
+    #app-container {
+      position: relative;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+    /* Responsive UI scale.
+       The canvases keep their fixed 1920x1080 coordinate space (the engine
+       letterboxes them), so the DOM overlay is sized against that same space:
+       1 unit in the stylesheet == 1 canvas pixel. canvas.js sets --ui-scale to
+       the canvas scale factor, so on a 1920x1080 kiosk it is exactly 1 and on
+       any other display every panel, font and button scales with the screen
+       instead of being stranded at pixel values tuned for 1080p. */
+    :root { --ui-scale: 1; }
+    }
+    #bg-canvas, #fg-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    #bg-canvas { z-index: 0; }
+    #fg-canvas { z-index: 10; }
+    #ui-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 100;
+      pointer-events: none;
+    }
+    #ui-overlay > .scene {
+      display: none;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    #ui-overlay > .scene.active {
+      display: flex;
+      pointer-events: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="fg-canvas"></canvas>
+
+    <!-- 第一页背景视频（客户 2026-10-30 提供的 DSC_5627.MOV 转码版：
+         河边渔船收网的实拍）。只在这台展台的**第一页**显示；
+         切到安装页等其它步骤时淡出，露出画布上原来画的河流和鱼群。
+         poster 是第一帧的截图，避免视频第一帧解码前闪黑。 -->
+    <video id="attract-video"
+           muted
+           loop
+           playsinline
+           preload="auto"
+           poster="assets/images/backgrounds/poster-frame.jpg">
+      <source src="assets/video/poster.mp4" type="video/mp4">
+    </video>
+
+    <div id="ui-overlay">
+      <!-- Screensaver / Attract -->
+      <div id="scene-screensaver" class="scene active">
+        <div id="attract-panel" class="attract-panel">
+          <h2 id="attract-title">Help Wanted!</h2>
+          <p id="attract-text">Looking for fishers!</p>
+          <button id="btn-attract-next" class="kiosk-btn yellow-btn">Learn more</button>
+        </div>
+
+        <!-- Split step (install): text near center + phone right -->
+        <!-- Title removed per review; the phone on the right already carries
+             the "Threatened Fishes App" name. Restore the line below if needed:
+             <h2 id="split-title">Threatened Fishes App</h2> -->
+        <div id="attract-install-text" class="attract-install-text" style="display:none">
+          <p id="split-text"></p>
+          <!-- Hint moved here from under the phone's Install button (client
+               review): it belongs with the copy on the left. The trailing arrow
+               still points across at the phone. -->
+          <p class="attract-install-hint" id="split-hint"></p>
+          <button id="split-left-btn" class="kiosk-btn yellow-btn" style="display:none">Go Fish!</button>
+        </div>
+        <div id="attract-install-phone" class="phone-frame phone-frame--right" style="display:none">
+          <div class="phone-screen">
+            <div class="phone-status-bar">Threatened Fishes App</div>
+            <div class="phone-body">
+              <img class="app-icon-img" src="assets/images/fish/giant-barb.png" alt="app icon">
+              <h3 class="app-name">Threatened Fish</h3>
+              <p class="app-desc" id="split-phone-desc"></p>
+              <p class="installed-text" id="split-phone-installed">Installed</p>
+              <button id="btn-attract-install" class="kiosk-btn primary-btn">Install</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Install complete → 3 second countdown before the catch step -->
+        <div id="attract-countdown" class="attract-countdown" style="display:none">
+          <p class="countdown-line" id="countdown-line1">Installation complete.</p>
+          <p class="countdown-line" id="countdown-line2">Get ready to fish in:</p>
+          <p class="countdown-number" id="countdown-number">3</p>
+        </div>
+      </div>
+
+      <!-- Fish Appear (login) -->
+      <div id="scene-fish-appear" class="scene">
+        <div class="phone-frame phone-frame--right">
+          <div class="phone-screen">
+            <div class="phone-status-bar">Threatened Fishes App</div>
+            <div class="phone-body">
+              <h2 class="phone-title">You caught a fish!</h2>
+              <p class="phone-text">Use the app to submit its data.</p>
+              <button id="btn-login" class="kiosk-btn primary-btn">Login</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fish Selection -->
+      <div id="scene-fish-selection" class="scene">
+        <div class="phone-frame phone-frame--right">
+          <div class="phone-screen">
+            <div class="phone-status-bar">Select the matching fish</div>
+            <div class="phone-body phone-body--top">
+              <div id="fish-grid" class="fish-grid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Measurement -->
+      <div id="scene-measurement" class="scene">
+        <div class="phone-frame phone-frame--right">
+          <div class="phone-screen">
+            <div class="phone-status-bar">Fish Data</div>
+            <div class="phone-body phone-body--form">
+              <!-- species image, sitting above the Common Name row -->
+              <div class="form-fish-row">
+                <img id="status-fish-img" class="status-fish-img" src="" alt="">
+              </div>
+              <div class="data-field"><span class="data-label">Common Name</span><span id="data-common-name" class="data-value">--</span></div>
+              <div class="data-field"><span class="data-label">Scientific Name</span><span id="data-scientific-name" class="data-value">--</span></div>
+              <div class="data-field"><span class="data-label">Length</span><span id="data-length" class="data-value">--</span></div>
+              <div class="data-field"><span class="data-label">Weight</span><span id="data-weight" class="data-value">--</span></div>
+              <div class="data-field"><span class="data-label">Location Caught</span><span id="data-location" class="data-value">--</span></div>
+              <button id="btn-submit" class="kiosk-btn primary-btn" disabled>Submit</button>
+            </div>
+
+            <!-- Correction note — pinned inside the phone screen.
+                 Client: show it before the data, then reveal the corrected
+                 record once OK is tapped. -->
+            <div id="correction-overlay" class="correction-overlay" style="display:none">
+              <div class="note-card">
+                <div class="note-pin"></div>
+                <div class="note-warning">&#9888;</div>
+                <p class="note-text">Wrong species,<br>Record has been corrected</p>
+                <button id="btn-correction-dismiss" class="note-ok">OK</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Choice -->
+      <div id="scene-choice" class="scene">
+        <div class="phone-frame phone-frame--right">
+          <div class="phone-screen">
+            <div class="phone-status-bar">Submit Record</div>
+            <div class="phone-body">
+              <h2 class="phone-title">What would you like to do with the fish?</h2>
+              <div class="choice-buttons">
+                <button id="btn-keep" class="kiosk-btn choice-btn keep-btn">
+                  <span class="choice-icon">&#9878;</span>
+                  Sell at market
+                </button>
+                <button id="btn-return" class="kiosk-btn choice-btn return-btn">
+                  <span class="choice-icon">&#8635;</span>
+                  Return to River
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sell at market animated page (no on-screen title, per client notes) -->
+      <!-- Client 2026-10-20: the closing copy is no longer a separate page that
+           only appears after the animation — it fades in ON TOP of the photo at
+           the moment the fish lands in the basin. The card sits exactly where the
+           closing page's card sits, so the hand-over is seamless. -->
+      <div id="scene-keep-market" class="scene">
+        <div id="market-ending" class="ending-overlay">
+          <p class="threatened-text ending-text"></p>
+        </div>
+      </div>
+
+      <!-- Return to river animated page (no on-screen title, per client notes) -->
+      <div id="scene-return-river" class="scene">
+        <div id="river-ending" class="ending-overlay">
+          <p class="threatened-text ending-text"></p>
+        </div>
+      </div>
+
+      <!-- Threatened Fishes App closing page (title removed per client notes) -->
+      <div id="scene-threatened-app" class="scene">
+        <div class="threatened-container">
+          <p class="threatened-text"></p>
+          <button id="btn-close-threatened" class="kiosk-btn primary-btn">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
